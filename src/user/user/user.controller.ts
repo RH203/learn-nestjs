@@ -3,9 +3,14 @@ import {
   Get,
   Header,
   HttpCode,
-  Param,
+  HttpRedirectResponse,
   Query,
+  Redirect,
+  Req,
+  Res,
 } from '@nestjs/common';
+
+import { Request, Response } from 'express';
 
 @Controller('/api/user')
 export class UserController {
@@ -75,15 +80,24 @@ export class UserController {
     });
   }
 
-  @Get()
+  @Get('/redirect')
+  @Redirect()
+  redirect(): HttpRedirectResponse {
+    return {
+      url: 'http://localhost:3000/api/user/sample-response',
+      statusCode: 302,
+    };
+  }
+
+  @Get('/hello-world')
   get(): string {
     return 'Hello World!';
   }
 
-  @Get('/:name')
-  getByName(@Param('name') name: string): string {
-    return `Halo ${name}, bagaimana kabar mu?`;
-  }
+  // @Get('/:name')
+  // getByName(@Param('name') name: string): string {
+  //   return `Halo ${name}, bagaimana kabar mu?`;
+  // }
 
   @Get('/nama')
   getByQuery(
@@ -91,5 +105,21 @@ export class UserController {
     @Query('last_name') lastName: string,
   ): object {
     return { message: `Apa kabar ${firstName} ${lastName}` };
+  }
+
+  @Get('/set-cookie')
+  setCookie(
+    @Query('first_name') firstName: string,
+    @Query('last_name') lastName: string,
+    @Res() response: Response,
+  ) {
+    response.cookie('first_name', firstName);
+    response.cookie('last_name', lastName);
+    response.status(200).send('Successfull send cookie');
+  }
+
+  @Get('/get-cookie')
+  getCookie(@Req() request: Request): string {
+    return request.cookies['name'];
   }
 }
