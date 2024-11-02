@@ -4,6 +4,7 @@ import {
   Header,
   HttpCode,
   HttpRedirectResponse,
+  Post,
   Query,
   Redirect,
   Req,
@@ -13,7 +14,8 @@ import {
 import { Request, Response } from 'express';
 import { UserDto } from '../../dtos/user.dto';
 import { UserService } from './user.service';
-import { Connection } from '../connection/connection';
+import { UserRepository } from '../user-repository/user-repository';
+import { StudentDto } from '../../dtos/student.dto';
 
 @Controller('/api/user')
 export class UserController {
@@ -72,7 +74,10 @@ export class UserController {
 
   constructor(
     private readonly userService: UserService,
-    private readonly databaseService: Connection,
+    // private readonly databaseService: Connection,
+    // private readonly mailService: MailService,
+    // @Inject('EmailService') private emailService: MailService,
+    private userRepository: UserRepository,
   ) {}
 
   @Get('/sample-response')
@@ -88,10 +93,41 @@ export class UserController {
     });
   }
 
-  @Get('/check-db')
-  checkDB(): string {
-    return this.databaseService.getName();
+  /*
+   * Add user into database */
+  @Post('/add-user')
+  addUser(
+    @Query('first_name') firstName: string,
+    @Query('last_name') lastName: string,
+  ): Promise<void> {
+    try {
+      return this.userRepository.saveUser(firstName, lastName);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
+
+  /*
+   * Show user in database */
+  @Get('/show-user')
+  async showUser(): Promise<StudentDto[]> {
+    try {
+      return this.userRepository.showUser();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }
+
+  //
+  // @Get('/check-db')
+  // checkDB(): string {
+  //   this.emailService.sayMail();
+  //   console.info('Email:');
+  //   this.emailService.sayMail();
+  //   return this.databaseService.getName();
+  // }
 
   @Get('/redirect')
   @Redirect()
