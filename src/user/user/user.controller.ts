@@ -11,10 +11,13 @@ import {
 } from '@nestjs/common';
 
 import { Request, Response } from 'express';
+import { UserDto } from '../../dtos/user.dto';
+import { UserService } from './user.service';
+import { Connection } from '../connection/connection';
 
 @Controller('/api/user')
 export class UserController {
-  private users: User[] = [
+  private users: UserDto[] = [
     {
       id: 1,
       name: 'Alice Smith',
@@ -67,17 +70,27 @@ export class UserController {
     },
   ];
 
+  constructor(
+    private readonly userService: UserService,
+    private readonly databaseService: Connection,
+  ) {}
+
   @Get('/sample-response')
   @Header('Content-Type', 'application/json')
   @HttpCode(200)
-  getResponse(): User[] {
-    return this.users.map((user: User): User => {
+  getResponse(): UserDto[] {
+    return this.users.map((user: UserDto): UserDto => {
       return {
         id: user.id,
         name: user.name,
         email: user.email,
       };
     });
+  }
+
+  @Get('/check-db')
+  checkDB(): string {
+    return this.databaseService.getName();
   }
 
   @Get('/redirect')
@@ -92,6 +105,11 @@ export class UserController {
   @Get('/hello-world')
   get(): string {
     return 'Hello World!';
+  }
+
+  @Get('/service')
+  helloService(@Query('name') name: string): string {
+    return this.userService.seyHello(name);
   }
 
   // @Get('/:name')
