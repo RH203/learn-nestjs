@@ -3,13 +3,21 @@ import {
   Get,
   Header,
   HttpCode,
-  Param,
+  HttpRedirectResponse,
   Query,
+  Redirect,
+  Req,
+  Res,
 } from '@nestjs/common';
+
+import { Request, Response } from 'express';
+import { UserDto } from '../../dtos/user.dto';
+import { UserService } from './user.service';
+import { Connection } from '../connection/connection';
 
 @Controller('/api/user')
 export class UserController {
-  private users: User[] = [
+  private users: UserDto[] = [
     {
       id: 1,
       name: 'Alice Smith',
@@ -62,11 +70,16 @@ export class UserController {
     },
   ];
 
+  constructor(
+    private readonly userService: UserService,
+    private readonly databaseService: Connection,
+  ) {}
+
   @Get('/sample-response')
   @Header('Content-Type', 'application/json')
   @HttpCode(200)
-  getResponse(): User[] {
-    return this.users.map((user: User): User => {
+  getResponse(): UserDto[] {
+    return this.users.map((user: UserDto): UserDto => {
       return {
         id: user.id,
         name: user.name,
@@ -75,15 +88,34 @@ export class UserController {
     });
   }
 
-  @Get()
+  @Get('/check-db')
+  checkDB(): string {
+    return this.databaseService.getName();
+  }
+
+  @Get('/redirect')
+  @Redirect()
+  redirect(): HttpRedirectResponse {
+    return {
+      url: 'http://localhost:3000/api/user/sample-response',
+      statusCode: 302,
+    };
+  }
+
+  @Get('/hello-world')
   get(): string {
     return 'Hello World!';
   }
 
-  @Get('/:name')
-  getByName(@Param('name') name: string): string {
-    return `Halo ${name}, bagaimana kabar mu?`;
+  @Get('/service')
+  helloService(@Query('name') name: string): string {
+    return this.userService.seyHello(name);
   }
+
+  // @Get('/:name')
+  // getByName(@Param('name') name: string): string {
+  //   return `Halo ${name}, bagaimana kabar mu?`;
+  // }
 
   @Get('/nama')
   getByQuery(
@@ -91,5 +123,21 @@ export class UserController {
     @Query('last_name') lastName: string,
   ): object {
     return { message: `Apa kabar ${firstName} ${lastName}` };
+  }
+
+  @Get('/set-cookie')
+  setCookie(
+    @Query('first_name') firstName: string,
+    @Query('last_name') lastName: string,
+    @Res() response: Response,
+  ) {
+    response.cookie('first_name', firstName);
+    response.cookie('last_name', lastName);
+    response.status(200).send('Successfull send cookie');
+  }
+
+  @Get('/get-cookie')
+  getCookie(@Req() request: Request): string {
+    return request.cookies['name'];
   }
 }
