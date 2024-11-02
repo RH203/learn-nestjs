@@ -6,15 +6,27 @@ import {
   MongoDbConnection,
   MySqlConnection,
 } from './connection/connection';
+import { UserRepository } from './user-repository/user-repository';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   controllers: [UserController],
+  imports: [PrismaModule],
   providers: [
     UserService,
-    {
-      provide: Connection,
-      useClass: 'mysql' === 'mysql' ? MySqlConnection : MongoDbConnection,
-    },
+    UserRepository,
+    // {
+    //   provide: Connection,
+    //   useClass: 'mysql' === 'mysql' ? MySqlConnection : MongoDbConnection,
+    // },
+    // {
+    //   provide: MailService,
+    //   useFactory: mailService,
+    // },
+    // {
+    //   provide: 'EmailService',
+    //   useExisting: MailService,
+    // },
   ],
 })
 export class UserModule {}
